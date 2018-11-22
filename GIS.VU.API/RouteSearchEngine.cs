@@ -33,7 +33,7 @@ namespace GIS.VU.API
             var startFeature = FindClosetFeature(request.Start);
             var endFeature = FindClosetFeature(request.End);
 
-            var pointFeature = request.Point == null ? null : FindClosetFeature(request.Point);
+            var pointFeature = request.Points.Length == 0 ? null : FindClosetFeature(request.Points.FirstOrDefault());
 
             if (pointFeature == null)
             {
