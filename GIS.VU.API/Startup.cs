@@ -1,16 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using BAMCIS.GeoJSON;
+using System.Diagnostics;
+using LoadGIS;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using SearchGIS;
 
 namespace GIS.VU.API
 {
@@ -28,11 +23,10 @@ namespace GIS.VU.API
             services.AddCors();
             services.AddMvc();
 
-            var watch = System.Diagnostics.Stopwatch.StartNew();
+            var watch = Stopwatch.StartNew();
             // the code that you want to measure comes here
 
-            services.AddSingleton(new RouteSearchEngine(".\\Data\\grid.txt", ".\\Data\\"));
-
+            services.AddSingleton(new SearchEngine(new Loader(".\\Data\\grid.txt", ".\\Data\\")));
 
             watch.Stop();
             var elapsedMs = watch.ElapsedMilliseconds;
@@ -42,15 +36,12 @@ namespace GIS.VU.API
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
+            if (env.IsDevelopment()) app.UseDeveloperExceptionPage();
 
             app.UseCors(builder =>
                 builder.AllowAnyHeader()
-                       .AllowAnyOrigin()
-                       .AllowAnyMethod());
+                    .AllowAnyOrigin()
+                    .AllowAnyMethod());
 
             app.UseMvc();
         }

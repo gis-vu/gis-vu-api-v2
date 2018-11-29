@@ -1,23 +1,12 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-    <UserSecretsId>432289b0-8dd2-4cec-8e3c-25db9f996536</UserSecretsId>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Folder Include="wwwroot\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="GeoJSON" Version="1.2.1" />
-    <PackageReference Include="Microsoft.AspNetCore.App" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DTOs\DTOs.csproj" />
     <ProjectReference Include="..\LoadGIS\LoadGIS.csproj" />
-    <ProjectReference Include="..\SearchGIS\SearchGIS.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,12 +16,6 @@
     <Reference Include="Models">
       <HintPath>..\..\PrepartyGIS\Models\bin\Debug\netstandard2.0\Models.dll</HintPath>
     </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="data.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
 </Project>

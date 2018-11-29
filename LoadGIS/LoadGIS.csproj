@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="Helpers">
+      <HintPath>..\..\PrepartyGIS\Helpers\bin\Debug\netstandard2.0\Helpers.dll</HintPath>
+    </Reference>
+    <Reference Include="Models">
+      <HintPath>..\..\PrepartyGIS\Models\bin\Debug\netstandard2.0\Models.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

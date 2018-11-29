@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using DTOs;
 using Microsoft.AspNetCore.Mvc;
+using SearchGIS;
 
 namespace GIS.VU.API.Controllers
 {
@@ -11,11 +12,11 @@ namespace GIS.VU.API.Controllers
     [ApiController]
     public class RouteController : ControllerBase
     {
-        private RouteSearchEngine _routeSearchEngine;
+        private readonly SearchEngine _searchEngine;
 
-        public RouteController(RouteSearchEngine routeSearchEngine)
+        public RouteController(SearchEngine searchEngine)
         {
-            _routeSearchEngine = routeSearchEngine;
+            _searchEngine = searchEngine;
         }
 
         [Route("")]
@@ -30,7 +31,7 @@ namespace GIS.VU.API.Controllers
         [HttpPost]
         public ActionResult<RouteSearchResponseDTO> Post([FromBody] RouteSearchRequestDTO request)
         {
-            return _routeSearchEngine.FindRoute(request);
+            return _searchEngine.FindRoute(request);
         }
     }
 }
