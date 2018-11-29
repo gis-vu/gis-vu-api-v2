@@ -1,6 +1,6 @@
 ﻿namespace DTOs
 {
-    public class RouteInfo
+    public class RouteInfoDTO
     {
         public double Length { get; set; }
     }

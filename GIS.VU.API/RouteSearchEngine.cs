@@ -27,7 +27,7 @@ namespace GIS.VU.API
             }
         }
 
-        public RouteSearchResponse FindRoute(RouteSearchRequest request)
+        public RouteSearchResponseDTO FindRoute(RouteSearchRequestDTO request)
         {
             var startGridCell = FindGridCell(request.Start);
             var endGridCell = FindGridCell(request.End);
@@ -54,7 +54,7 @@ namespace GIS.VU.API
 
                 var route2 = PathToRoute(path2);
 
-                return new RouteSearchResponse(new[] {route2});
+                return new RouteSearchResponseDTO(new[] {route2});
             }
             else
             {
@@ -90,7 +90,7 @@ namespace GIS.VU.API
                 route3 = MergeTwoRoutes(route3, route5);
 
 
-                return new RouteSearchResponse(new[] {route3});
+                return new RouteSearchResponseDTO(new[] {route3});
             }
         }
 
@@ -104,7 +104,7 @@ namespace GIS.VU.API
             }
         }
 
-        private GridCell FindGridCell(Coordinate requestStart)
+        private GridCell FindGridCell(CoordinateDTO requestStart)
         {
             foreach (var g in _grid)
             {
@@ -119,18 +119,18 @@ namespace GIS.VU.API
             throw new Exception();
         }
 
-        private Route MergeTwoRoutes(Route route1, Route route2)
+        private RouteDTO MergeTwoRoutes(RouteDTO route1, RouteDTO route2)
         {
-            var data = new RouteData
+            var data = new RouteDataDTO
             {
                 Type = route1.Data.Type
             };
-            var info = new RouteInfo
+            var info = new RouteInfoDTO
             {
                 Length = route1.Info.Length + route2.Info.Length
             };
 
-            var result = new Route
+            var result = new RouteDTO
             {
                 Data = data,
                 Info = info
@@ -187,20 +187,20 @@ namespace GIS.VU.API
             return result;
         }
 
-        private Route PathToRoute(List<RouteFeature> path)
+        private RouteDTO PathToRoute(List<RouteFeature> path)
         {
             //var a = path.FirstOrDefault(x => x.Feature.Properties["osm_id"] == "195164433");
 
-            return new Route
+            return new RouteDTO
             {
-                Data = new RouteData
+                Data = new RouteDataDTO
                 {
                     Type = "LineString",
                     Coordinates = SorthPath(path.Select(x =>
                         x.Data.Coordinates.Select(y => new[] {y.Longitude, y.Latitude})
                             .ToArray()).ToArray())
                 },
-                Info = new RouteInfo
+                Info = new RouteInfoDTO
                 {
                     Length = Math.Round(path.Sum(x => (double) x.Data.Properties["lenght"]), 2)
                 }
@@ -283,7 +283,7 @@ namespace GIS.VU.API
         }
 
 
-        private RouteFeature FindClosetFeature(Coordinate coordinate, RouteFeature[] features)
+        private RouteFeature FindClosetFeature(CoordinateDTO coordinate, RouteFeature[] features)
         {
             var closet = features.First();
             var dist = DistanceHelpers.CalcualteDistanceToFeature(

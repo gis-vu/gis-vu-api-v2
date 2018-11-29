@@ -19,9 +19,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="DTO">
-      <HintPath>..\..\PrepartyGIS\DTO\bin\Debug\netstandard2.0\DTO.dll</HintPath>
-    </Reference>
     <Reference Include="Helpers">
       <HintPath>..\..\PrepartyGIS\Helpers\bin\Debug\netstandard2.0\Helpers.dll</HintPath>
     </Reference>

@@ -11,10 +11,10 @@ namespace GIS.VU.API
     class Graph
     {
         private RouteFeature[] _routeFeature2s;
-        private SearchOptions _searchOptions;
+        private SearchOptionsDTO _searchOptions;
 
 
-        public Graph(RouteFeature[] routeFeature2s, SearchOptions searchOptions)
+        public Graph(RouteFeature[] routeFeature2s, SearchOptionsDTO searchOptions)
         {
             _routeFeature2s = routeFeature2s;
             _searchOptions = searchOptions;

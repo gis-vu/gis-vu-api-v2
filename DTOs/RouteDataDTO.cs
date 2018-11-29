@@ -1,6 +1,6 @@
 ﻿namespace DTOs
 {
-    public class RouteData
+    public class RouteDataDTO
     {
         public string Type { get; set; }
         public double[][] Coordinates { get; set; }

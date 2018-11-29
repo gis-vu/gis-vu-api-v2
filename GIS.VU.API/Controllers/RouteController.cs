@@ -28,7 +28,7 @@ namespace GIS.VU.API.Controllers
 
         [Route("api/[controller]")]
         [HttpPost]
-        public ActionResult<RouteSearchResponse> Post([FromBody] RouteSearchRequest request)
+        public ActionResult<RouteSearchResponseDTO> Post([FromBody] RouteSearchRequestDTO request)
         {
             return _routeSearchEngine.FindRoute(request);
         }
