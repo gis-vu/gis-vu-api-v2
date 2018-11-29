@@ -11,11 +11,14 @@ namespace GIS.VU.API
 {
     public class RouteSearchEngine
     {
+        private readonly string _pathToData;
+
         //private readonly RouteFeature[] _routeFeature2s;
         private readonly GridCell[] _grid;
 
         public RouteSearchEngine(string pathToGrid, string pathToData)
         {
+            _pathToData = pathToData;
             var formatter = new BinaryFormatter();
 
             using (var fileStream = new FileStream(pathToGrid, FileMode.Open))
@@ -26,8 +29,13 @@ namespace GIS.VU.API
 
         public RouteSearchResponse FindRoute(RouteSearchRequest request)
         {
-            var startFeature = FindClosetFeature(request.Start);
-            var endFeature = FindClosetFeature(request.End);
+            var startGridCell = FindGridCell(request.Start);
+            var endGridCell = FindGridCell(request.End);
+
+            var cellData = ReadCellData(startGridCell.Index); 
+
+            var startFeature = FindClosetFeature(request.Start, cellData.Features);
+            var endFeature = FindClosetFeature(request.End, cellData.Features);
 
             //var pointFeature = request.Points.Length == 0 ? null : FindClosetFeature(request.Points.FirstOrDefault());
 
@@ -41,7 +49,7 @@ namespace GIS.VU.API
 
                 // var route1 = PathToRoute(path);
 
-                var g2 = new Graph(_routeFeature2s, request.SearchOptions);
+                var g2 = new Graph(cellData.Features, request.SearchOptions);
                 var path2 = g2.FindShortestPath(startFeature, endFeature, null);
 
                 var route2 = PathToRoute(path2);
@@ -64,26 +72,51 @@ namespace GIS.VU.API
                 //var route2 = PathToRoute(path2);
                 //var r1 = MergeTwoRoutes(route1, route2);
 
-                var g2 = new Graph(_routeFeature2s, request.SearchOptions);
-                var path3 = g2.FindShortestPath(startFeature, FindClosetFeature(request.Points[0]), null);
+                var g2 = new Graph(cellData.Features, request.SearchOptions);
+                var path3 = g2.FindShortestPath(startFeature, FindClosetFeature(request.Points[0], cellData.Features), null);
                 var route3 = PathToRoute(path3);
 
                 for (var i = 1; i < request.Points.Length; i++)
                 {
-                    var path4 = g2.FindShortestPath(FindClosetFeature(request.Points[i - 1]),
-                        FindClosetFeature(request.Points[i]), null);
+                    var path4 = g2.FindShortestPath(FindClosetFeature(request.Points[i - 1], cellData.Features),
+                        FindClosetFeature(request.Points[i], cellData.Features), null);
                     var route4 = PathToRoute(path4);
                     route3 = MergeTwoRoutes(route3, route4);
                 }
 
 
-                var path5 = g2.FindShortestPath(FindClosetFeature(request.Points.Last()), endFeature, null);
+                var path5 = g2.FindShortestPath(FindClosetFeature(request.Points.Last(), cellData.Features), endFeature, null);
                 var route5 = PathToRoute(path5);
                 route3 = MergeTwoRoutes(route3, route5);
 
 
                 return new RouteSearchResponse(new[] {route3});
             }
+        }
+
+        private CellData ReadCellData(string index)
+        {
+            var formatter = new BinaryFormatter();
+
+            using (var fileStream = new FileStream(_pathToData + index + ".txt", FileMode.Open))
+            {
+                return (CellData)formatter.Deserialize(fileStream);
+            }
+        }
+
+        private GridCell FindGridCell(Coordinate requestStart)
+        {
+            foreach (var g in _grid)
+            {
+                if(DistanceHelpers.IsInside(new PointPosition()
+                {
+                    Longitude = requestStart.Lng,
+                    Latitude = requestStart.Lat
+                }.ToDoubleArray(), g.Border.Select(x=>x.ToDoubleArray()).ToArray()))
+                return g;
+            }
+
+            throw new Exception();
         }
 
         private Route MergeTwoRoutes(Route route1, Route route2)
@@ -250,22 +283,22 @@ namespace GIS.VU.API
         }
 
 
-        private RouteFeature FindClosetFeature(Coordinate coordinate)
+        private RouteFeature FindClosetFeature(Coordinate coordinate, RouteFeature[] features)
         {
-            var closet = _routeFeature2s.First();
+            var closet = features.First();
             var dist = DistanceHelpers.CalcualteDistanceToFeature(
                 closet.Data.Coordinates.Select(x => x.ToDoubleArray()).ToArray(), new PointPosition
                 {
                     Latitude = coordinate.Lat,
-                    Longitude = coordinate.Lat
+                    Longitude = coordinate.Lng
                 }.ToDoubleArray());
 
-            foreach (var f in _routeFeature2s.Skip(1))
+            foreach (var f in features.Skip(1))
             {
                 var newDistance = DistanceHelpers.CalcualteDistanceToFeature(f.Data.Coordinates.Select(x=>x.ToDoubleArray()).ToArray(), new PointPosition
                 {
                     Latitude = coordinate.Lat,
-                    Longitude = coordinate.Lat
+                    Longitude = coordinate.Lng
                 }.ToDoubleArray());
 
                 if (newDistance < dist)

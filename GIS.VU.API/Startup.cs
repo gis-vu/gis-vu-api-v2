@@ -31,7 +31,7 @@ namespace GIS.VU.API
             var watch = System.Diagnostics.Stopwatch.StartNew();
             // the code that you want to measure comes here
 
-            services.AddSingleton(new RouteSearchEngine(".\\data.txt"));
+            services.AddSingleton(new RouteSearchEngine(".\\Data\\grid.txt", ".\\Data\\"));
 
 
             watch.Stop();
