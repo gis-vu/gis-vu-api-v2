@@ -4,22 +4,23 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using DTOs;
+using Models;
 
 namespace GIS.VU.API
 {
     class Graph
     {
-        private RouteFeature[] _routeFeatures;
+        private RouteFeature[] _routeFeature2s;
         private SearchOptions _searchOptions;
 
 
-        public Graph(RouteFeature[] routeFeatures, SearchOptions searchOptions)
+        public Graph(RouteFeature[] routeFeature2s, SearchOptions searchOptions)
         {
-            _routeFeatures = routeFeatures;
+            _routeFeature2s = routeFeature2s;
             _searchOptions = searchOptions;
         }
 
-        public List<RouteFeature> FindShortestPath(RouteFeature startFeature, RouteFeature endFeature, List<RouteFeature> featuresToOverlap)
+        public List<RouteFeature> FindShortestPath(RouteFeature startFeature2, RouteFeature endFeature2, List<RouteFeature> featuresToOverlap)
         {
             var previous = new Dictionary<RouteFeature, RouteFeature>();
             var distances = new Dictionary<RouteFeature, double>();
@@ -27,11 +28,11 @@ namespace GIS.VU.API
 
             List<RouteFeature> path = null;
 
-            foreach (var vertex in _routeFeatures)
+            foreach (var vertex in _routeFeature2s)
             {
-                if (vertex == startFeature)
+                if (vertex == startFeature2)
                 {
-                    distances[vertex] = ApplySearchOptionsToGetLength(startFeature, featuresToOverlap);
+                    distances[vertex] = ApplySearchOptionsToGetLength(startFeature2, featuresToOverlap);
                 }
                 else
                 {
@@ -50,7 +51,7 @@ namespace GIS.VU.API
                 var smallest = nodes.First();
                 nodes.Remove(smallest);
 
-                if (smallest == endFeature)
+                if (smallest == endFeature2)
                 {
                     path = new List<RouteFeature>();
                     while (previous.ContainsKey(smallest))
@@ -81,21 +82,24 @@ namespace GIS.VU.API
             if (path == null) //no path 
                 return null;
 
-            path.Add(startFeature);
+            path.Add(startFeature2);
 
             return path;
         }
 
-        private double ApplySearchOptionsToGetLength(RouteFeature feature, List<RouteFeature> featuresToOverlap)
+        private double ApplySearchOptionsToGetLength(RouteFeature feature2, List<RouteFeature> featuresToOverlap)
         {
 
-            var featureLength = feature.Feature.Properties["length"];
+            var featureLength = feature2.Data.Properties["lenght"];
+
+            return featureLength;
+            //temp fix
 
             if (_searchOptions == null)
                 return featureLength;
 
             var option = _searchOptions.PropertyImportance.FirstOrDefault(x =>
-                feature.Feature.Properties.Any(y => y.Key == x.Property && y.Value == x.Value));
+                feature2.Data.Properties.Any(y => y.Key == x.Property && y.Value == x.Value));
 
             if (option != null)
             {
@@ -103,16 +107,17 @@ namespace GIS.VU.API
             }
 
 
-            if (featuresToOverlap != null && featuresToOverlap.Contains(feature))
+            if (featuresToOverlap != null && featuresToOverlap.Contains(feature2))
             {
                 featureLength *= _searchOptions.TrackOverlapImportance;
             }
 
             foreach (var propertyValueImportance in _searchOptions.PropertyValueImportance)
             {
-                if (feature.Feature.Properties[propertyValueImportance.Property] <= propertyValueImportance.Threshold)
+                if (feature2.Data.Properties[propertyValueImportance.Property] <= propertyValueImportance.Threshold)
                     featureLength *= propertyValueImportance.Importance;
             }
+
 
             return featureLength;
         }
