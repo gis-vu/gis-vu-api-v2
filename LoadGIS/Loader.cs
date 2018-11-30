@@ -49,7 +49,7 @@ namespace LoadGIS
             if (!cellToFeatures.ContainsKey(endGridCell.Index))
             {
                 cellToFeatures[endGridCell.Index] = ReadCellData(endGridCell.Index);
-                //update neigbours
+                UpdateNeighbours(cellToFeatures, endGridCell.Index);
             }
 
             endFeature = FindClosetFeature(end, cellToFeatures[endGridCell.Index].Features);
@@ -64,7 +64,7 @@ namespace LoadGIS
                 if (!cellToFeatures.ContainsKey(cell.Index))
                 {
                     cellToFeatures[cell.Index] = ReadCellData(cell.Index);
-                    //update neigbours
+                    UpdateNeighbours(cellToFeatures, cell.Index);
                 }
 
                 intermediateFeatures.Add(FindClosetFeature(p, cellToFeatures[cell.Index].Features));
@@ -78,6 +78,37 @@ namespace LoadGIS
                 IntermediateFeatures = intermediateFeatures.ToArray(),
                 AllFeatures = cellToFeatures.Values.SelectMany(x=> x.Features).ToArray()
             };
+        }
+
+        private void UpdateNeighbours(Dictionary<string, CellData> cellToFeatures, string cellIndex)
+        {
+            Console.WriteLine("Updating feature neigbhours");
+
+            double amount = 0, temp = 0, all = cellToFeatures[cellIndex].BorderFeatures.Length;
+
+            var newFeatures = cellToFeatures[cellIndex].BorderFeatures;
+
+            var borderFeatures = cellToFeatures.Where(x => x.Key != cellIndex).SelectMany(x => x.Value.BorderFeatures).ToArray();
+
+            for (var i = 0; i < all - 1; i++)
+            {
+                amount++;
+                temp++;
+                if (temp > all / 100)
+                {
+                    Console.WriteLine(Math.Round(amount / all * 100, 2));
+                    temp = 0;
+                }
+
+                for (var j = 0; j < borderFeatures.Length; j++)
+                    if (DistanceHelpers.AreNeighbours(
+                        newFeatures[i].Data.Coordinates.Select(x=>x.ToDoubleArray()).ToArray(),
+                        borderFeatures[j].Data.Coordinates.Select(x=>x.ToDoubleArray()).ToArray()))
+                    {
+                        newFeatures[i].Neighbours.Add(borderFeatures[j]);
+                        borderFeatures[j].Neighbours.Add(newFeatures[i]);
+                    }
+            }
         }
 
         private CellData ReadCellData(string index)
