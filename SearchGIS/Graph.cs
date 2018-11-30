@@ -20,7 +20,10 @@ namespace GIS.VU.API
             _searchOptions = searchOptions;
         }
 
-        public List<RouteFeature> FindShortestPath(RouteFeature startFeature2, RouteFeature endFeature2, List<RouteFeature> featuresToOverlap)
+        public List<RouteFeature> FindShortestPath(
+            RouteFeature startFeature, 
+            RouteFeature endFeature,
+            List<RouteFeature> featuresToOverlap)
         {
             var previous = new Dictionary<RouteFeature, RouteFeature>();
             var distances = new Dictionary<RouteFeature, double>();
@@ -30,9 +33,9 @@ namespace GIS.VU.API
 
             foreach (var vertex in _routeFeature2s)
             {
-                if (vertex == startFeature2)
+                if (vertex == startFeature)
                 {
-                    distances[vertex] = ApplySearchOptionsToGetLength(startFeature2, featuresToOverlap);
+                    distances[vertex] = ApplySearchOptionsToGetLength(startFeature, featuresToOverlap);
                 }
                 else
                 {
@@ -51,7 +54,7 @@ namespace GIS.VU.API
                 var smallest = nodes.First();
                 nodes.Remove(smallest);
 
-                if (smallest == endFeature2)
+                if (smallest == endFeature)
                 {
                     path = new List<RouteFeature>();
                     while (previous.ContainsKey(smallest))
@@ -82,7 +85,9 @@ namespace GIS.VU.API
             if (path == null) //no path 
                 return null;
 
-            path.Add(startFeature2);
+            path.Add(startFeature);
+
+            path.Reverse();
 
             return path;
         }

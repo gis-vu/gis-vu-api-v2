@@ -54,9 +54,22 @@ namespace SearchGIS
                 // var route1 = PathToRoute(path);
 
                 var g2 = new Graph(loadedData.AllFeatures, request.SearchOptions);
-                var path2 = g2.FindShortestPath(loadedData.StartFeature, loadedData.EndFeature, null);
+                var path2 = g2.FindShortestPath(
+                    loadedData.StartFeature, 
+                    loadedData.EndFeature, 
+                    null);
 
-                var route2 = PathToRoute(path2);
+                var route2 = PathToRoute(path2, 
+                    new PointPosition()
+                    {
+                        Latitude = request.Start.Lat,
+                        Longitude = request.Start.Lng
+                    },
+                    new PointPosition()
+                    {
+                        Latitude = request.End.Lat,
+                        Longitude = request.End.Lng
+                    });
 
                 return new RouteSearchResponseDTO(new[] {route2});
             }
@@ -76,27 +89,29 @@ namespace SearchGIS
                 //var route2 = PathToRoute(path2);
                 //var r1 = MergeTwoRoutes(route1, route2);
 
-                var g2 = new Graph(loadedData.AllFeatures, request.SearchOptions);
+                //var g2 = new Graph(loadedData.AllFeatures, request.SearchOptions);
 
-                var data1 = FeaturesToGeojsonHelper.ToGeojson(new double[][][] {loadedData.StartFeature.Data.Coordinates.Select(x => x.ToDoubleArray()).ToArray()});
-                var data2 = FeaturesToGeojsonHelper.ToGeojson(new double[][][] {loadedData.IntermediateFeatures.First().Data.Coordinates.Select(x => x.ToDoubleArray()).ToArray()});
+                //var data1 = FeaturesToGeojsonHelper.ToGeojson(new double[][][] {loadedData.StartFeature.Data.Coordinates.Select(x => x.ToDoubleArray()).ToArray()});
+                //var data2 = FeaturesToGeojsonHelper.ToGeojson(new double[][][] {loadedData.IntermediateFeatures.First().Data.Coordinates.Select(x => x.ToDoubleArray()).ToArray()});
 
-                var path3 = g2.FindShortestPath(loadedData.StartFeature, loadedData.IntermediateFeatures.First(), null);
-                var route3 = PathToRoute(path3);
+                //var path3 = g2.FindShortestPath(loadedData.StartFeature, loadedData.IntermediateFeatures.First(), null);
+                //var route3 = PathToRoute(path3, );
 
-                for (var i=1; i < loadedData.IntermediateFeatures.Length; i++)
-                {
-                    var path4 = g2.FindShortestPath(loadedData.IntermediateFeatures[i-1], loadedData.IntermediateFeatures[i], null);
-                    var route4 = PathToRoute(path4);
-                    route3 = MergeTwoRoutes(route3, route4);
-                }
+                //for (var i=1; i < loadedData.IntermediateFeatures.Length; i++)
+                //{
+                //    var path4 = g2.FindShortestPath(loadedData.IntermediateFeatures[i-1], loadedData.IntermediateFeatures[i], null);
+                //    var route4 = PathToRoute(path4);
+                //    route3 = MergeTwoRoutes(route3, route4);
+                //}
 
-                var path5 = g2.FindShortestPath(loadedData.IntermediateFeatures.Last(), loadedData.EndFeature, null);
-                var route5 = PathToRoute(path5);
-                route3 = MergeTwoRoutes(route3, route5);
+                //var path5 = g2.FindShortestPath(loadedData.IntermediateFeatures.Last(), loadedData.EndFeature, null);
+                //var route5 = PathToRoute(path5);
+                //route3 = MergeTwoRoutes(route3, route5);
 
 
-                return new RouteSearchResponseDTO(new[] {route3});
+                //return new RouteSearchResponseDTO(new[] {route3});
+
+                throw new Exception("NO NO");
             }
         }
 
@@ -169,11 +184,11 @@ namespace SearchGIS
             return result;
         }
 
-        private RouteDTO PathToRoute(List<RouteFeature> path)
+        private RouteDTO PathToRoute(List<RouteFeature> path, PointPosition startPosition, PointPosition endPosition)
         {
             //var a = path.FirstOrDefault(x => x.Feature.Properties["osm_id"] == "195164433");
 
-            return new RouteDTO
+            var routeDto = new RouteDTO
             {
                 Data = new RouteDataDTO
                 {
@@ -184,9 +199,32 @@ namespace SearchGIS
                 },
                 Info = new RouteInfoDTO
                 {
-                    Length = Math.Round(path.Sum(x => (double) x.Data.Properties["lenght"]), 2)
+                    Length = 0
+                    //Length = Math.Round(path.Sum(x => (double) x.Data.Properties["lenght"]), 2)
+                    //TODO fix
                 }
             };
+
+
+            var firstFeature = path.First();
+            var lastFeature = path.Last();
+
+            var distanceToStartFeature = DistanceHelpers.CalcualteDistanceToFeature(firstFeature.Data.Coordinates.Select(x => x.ToDoubleArray()).ToArray(), startPosition.ToDoubleArray());
+
+            if (distanceToStartFeature < DistanceHelpers.GetDistance(startPosition.ToDoubleArray(), firstFeature.Data.Coordinates.First().ToDoubleArray()) ||
+                distanceToStartFeature < DistanceHelpers.GetDistance(startPosition.ToDoubleArray(), firstFeature.Data.Coordinates.Last().ToDoubleArray()))
+            {
+                var projectionResult = DistanceHelpers.GetProjectionOnFeature(firstFeature.Data.Coordinates.Select(x=>x.ToDoubleArray()).ToArray(), startPosition.ToDoubleArray());
+
+                var result = new List<double[]>() { projectionResult.Item2 };
+
+                var index = Array.FindIndex(routeDto.Data.Coordinates, x=> x.SequenceEqual(projectionResult.Item1.Item2));
+
+                result.AddRange(routeDto.Data.Coordinates.Skip(index + 1));
+                routeDto.Data.Coordinates = result.ToArray();
+            }
+
+            return routeDto;
         }
 
         private double[][] SorthPath(IList<double[][]> path)
@@ -260,6 +298,11 @@ namespace SearchGIS
             //    {
             //        coordinates = AreClose(coordinates.First(), f.Last()) ? f.Concat(coordinates.ToArray()).ToList() : f.Reverse().Concat(coordinates.ToArray()).ToList();
             //    }
+
+            if (!coordinates.First().SequenceEqual(path.First().First()))
+            {
+                coordinates = coordinates.Reverse();
+            }
 
             return coordinates.ToArray();
         }
