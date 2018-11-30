@@ -218,9 +218,9 @@ namespace SearchGIS
 
                 var result = new List<double[]>() { projectionResult.Item2 };
 
-                var index = Array.FindIndex(routeDto.Data.Coordinates, x => x.SequenceEqual(projectionResult.Item1.Item2));
+                var index = Array.FindIndex(routeDto.Data.Coordinates, x => x.SequenceEqual(projectionResult.Item1.Item1));
 
-                result.AddRange(routeDto.Data.Coordinates.Skip(index));
+                result.AddRange(routeDto.Data.Coordinates.Skip(index + 1));
                 routeDto.Data.Coordinates = result.ToArray();
             }
 
@@ -232,7 +232,7 @@ namespace SearchGIS
             {
                 var projectionResult = DistanceHelpers.GetProjectionOnFeature(lastFeature.Data.Coordinates.Select(x => x.ToDoubleArray()).ToArray(), endPosition.ToDoubleArray());
 
-                var index = Array.FindIndex(routeDto.Data.Coordinates, x => x.SequenceEqual(projectionResult.Item1.Item2));
+                var index = Array.FindIndex(routeDto.Data.Coordinates, x => x.SequenceEqual(projectionResult.Item1.Item1));
 
                 var result = routeDto.Data.Coordinates.Take(index).ToList();
                 result.Add(projectionResult.Item2);
@@ -299,28 +299,97 @@ namespace SearchGIS
                 throw new Exception("Something went wrong at path sorting");
             }
 
-            //foreach (var f in path.Skip(1))
-            //    if (AreClose(last, f.First()))
-            //    {
-            //        coordinates.AddRange(f);
-            //        last = f.Last();
-            //    }
-            //    else if (AreClose(last, f.Last())) //apversti
-            //    {
-            //        coordinates.AddRange(f.Reverse());
-            //        last = f.First();
-            //    }
-            //    else //jei reikia deti i prieki
-            //    {
-            //        coordinates = AreClose(coordinates.First(), f.Last()) ? f.Concat(coordinates.ToArray()).ToList() : f.Reverse().Concat(coordinates.ToArray()).ToList();
-            //    }
-
             if (!coordinates.First().SequenceEqual(path.First().First()))
             {
                 coordinates = coordinates.Reverse();
             }
 
             return coordinates.ToArray();
+        }
+
+        private IList<RouteFeature> SorthFeatures(IList<RouteFeature> path)
+        {
+            var tempPat = new List<RouteFeature>(path);
+
+            var lastSubPath = tempPat.First();
+            tempPat.Remove(lastSubPath);
+
+            IEnumerable<RouteFeature> routeFeatures = new List<RouteFeature>() {lastSubPath};
+
+
+            while (tempPat.Any())
+            {
+                var newLastSubPath = tempPat.FirstOrDefault(x => DistanceHelpers.AreClose(x.Data.Coordinates.First().ToDoubleArray(), routeFeatures.First().Data.Coordinates.First().ToDoubleArray()));
+
+                if (newLastSubPath != null)
+                {
+                    tempPat.Remove(newLastSubPath);
+
+                    var result = new List<RouteFeature>() {newLastSubPath};
+                    result.AddRange(routeFeatures);
+
+                    newLastSubPath.Data.Coordinates = newLastSubPath.Data.Coordinates.Reverse().ToArray();
+
+                    routeFeatures = result;
+
+                    continue;
+                }
+
+                newLastSubPath = tempPat.FirstOrDefault(x => DistanceHelpers.AreClose(x.Data.Coordinates.First().ToDoubleArray(), routeFeatures.Last().Data.Coordinates.Last().ToDoubleArray()));
+
+                if (newLastSubPath != null)
+                {
+                    tempPat.Remove(newLastSubPath);
+
+                    var result = new List<RouteFeature>();
+                    result.AddRange(routeFeatures);
+                    result.Add(newLastSubPath);
+
+                    routeFeatures = result;
+
+                    continue;
+                }
+
+                newLastSubPath = tempPat.FirstOrDefault(x => DistanceHelpers.AreClose(x.Data.Coordinates.Last().ToDoubleArray(), routeFeatures.First().Data.Coordinates.First().ToDoubleArray()));
+
+                if (newLastSubPath != null)
+                {
+                    tempPat.Remove(newLastSubPath);
+
+                    var result = new List<RouteFeature>() { newLastSubPath };
+                    result.AddRange(routeFeatures);
+
+                    routeFeatures = result;
+
+                    continue;
+                }
+
+                newLastSubPath = tempPat.FirstOrDefault(x => DistanceHelpers.AreClose(x.Data.Coordinates.Last().ToDoubleArray(), routeFeatures.Last().Data.Coordinates.Last().ToDoubleArray()));
+
+                if (newLastSubPath != null)
+                {
+                    tempPat.Remove(newLastSubPath);
+
+                    var result = new List<RouteFeature>();
+                    result.AddRange(routeFeatures);
+                    result.Add(newLastSubPath);
+
+                    newLastSubPath.Data.Coordinates = newLastSubPath.Data.Coordinates.Reverse().ToArray();
+
+                    routeFeatures = result;
+
+                    continue;
+                }
+
+                throw new Exception("Something went wrong at path sorting");
+            }
+
+            if (!routeFeatures.First().Data.Coordinates.First().ToDoubleArray().SequenceEqual(path.First().Data.Coordinates.First().ToDoubleArray()))
+            {
+                routeFeatures = routeFeatures.Reverse();
+            }
+
+            return routeFeatures.ToArray();
         }
     }
 }
