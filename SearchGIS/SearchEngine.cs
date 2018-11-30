@@ -188,14 +188,16 @@ namespace SearchGIS
         {
             //var a = path.FirstOrDefault(x => x.Feature.Properties["osm_id"] == "195164433");
 
+            var sortedFeatures = SorthFeatures(path);
+
             var routeDto = new RouteDTO
             {
                 Data = new RouteDataDTO
                 {
                     Type = "LineString",
-                    Coordinates = SorthPath(path.Select(x =>
+                    Coordinates = sortedFeatures.SelectMany(x =>
                         x.Data.Coordinates.Select(y => new[] {y.Longitude, y.Latitude})
-                            .ToArray()).ToArray())
+                            .ToArray()).ToArray()
                 },
                 Info = new RouteInfoDTO
                 {
@@ -206,8 +208,8 @@ namespace SearchGIS
             };
 
 
-            var firstFeature = path.First();
-            var lastFeature = path.Last();
+            var firstFeature = sortedFeatures.First();
+            var lastFeature = sortedFeatures.Last();
 
             var distanceToStartFeature = DistanceHelpers.CalcualteDistanceToFeature(firstFeature.Data.Coordinates.Select(x => x.ToDoubleArray()).ToArray(), startPosition.ToDoubleArray());
 
@@ -232,7 +234,7 @@ namespace SearchGIS
             {
                 var projectionResult = DistanceHelpers.GetProjectionOnFeature(lastFeature.Data.Coordinates.Select(x => x.ToDoubleArray()).ToArray(), endPosition.ToDoubleArray());
 
-                var index = Array.FindIndex(routeDto.Data.Coordinates, x => x.SequenceEqual(projectionResult.Item1.Item1));
+                var index = Array.FindIndex(routeDto.Data.Coordinates, x => x.SequenceEqual(projectionResult.Item1.Item2));
 
                 var result = routeDto.Data.Coordinates.Take(index).ToList();
                 result.Add(projectionResult.Item2);
@@ -307,7 +309,7 @@ namespace SearchGIS
             return coordinates.ToArray();
         }
 
-        private IList<RouteFeature> SorthFeatures(IList<RouteFeature> path)
+        public IList<RouteFeature> SorthFeatures(IList<RouteFeature> path)
         {
             var tempPat = new List<RouteFeature>(path);
 
@@ -387,6 +389,11 @@ namespace SearchGIS
             if (!routeFeatures.First().Data.Coordinates.First().ToDoubleArray().SequenceEqual(path.First().Data.Coordinates.First().ToDoubleArray()))
             {
                 routeFeatures = routeFeatures.Reverse();
+
+                foreach (var f in routeFeatures)
+                {
+                    f.Data.Coordinates = f.Data.Coordinates.Reverse().ToArray();
+                }
             }
 
             return routeFeatures.ToArray();
