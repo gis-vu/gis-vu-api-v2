@@ -90,7 +90,7 @@ namespace LoadGIS
 
             var borderFeatures = cellToFeatures.Where(x => x.Key != cellIndex).SelectMany(x => x.Value.BorderFeatures).ToArray();
 
-            for (var i = 0; i < all - 1; i++)
+            for (var i = 0; i < all; i++)
             {
                 amount++;
                 temp++;
