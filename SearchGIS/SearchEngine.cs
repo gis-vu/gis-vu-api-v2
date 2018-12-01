@@ -303,7 +303,7 @@ namespace SearchGIS
         //    return coordinates.ToArray();
         //}
 
-        public IList<RouteFeature> SortFeatures(IList<RouteFeature> path)
+        private IList<RouteFeature> SortFeatures(IList<RouteFeature> path)
         {
             var tempPat = new List<RouteFeature>(path);
 
