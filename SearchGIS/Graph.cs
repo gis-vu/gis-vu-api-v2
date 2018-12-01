@@ -95,7 +95,7 @@ namespace GIS.VU.API
         private double ApplySearchOptionsToGetLength(RouteFeature feature2, List<RouteFeature> featuresToOverlap)
         {
 
-            var featureLength = feature2.Data.Properties["lenght"];
+            var featureLength = feature2.Data.Properties["LENGTH"];
 
             return featureLength;
             //temp fix

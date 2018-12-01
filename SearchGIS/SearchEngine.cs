@@ -200,9 +200,9 @@ namespace SearchGIS
             var distanceToStartFeature = DistanceHelpers.CalcualteDistanceToFeature(
                 firstFeature.Data.Coordinates.Select(x => x.ToDoubleArray()).ToArray(), startPosition.ToDoubleArray());
 
-            if (distanceToStartFeature < DistanceHelpers.GetDistance(startPosition.ToDoubleArray(),
-                    firstFeature.Data.Coordinates.First().ToDoubleArray()) ||
-                distanceToStartFeature < DistanceHelpers.GetDistance(startPosition.ToDoubleArray(),
+            if (distanceToStartFeature != DistanceHelpers.GetDistance(startPosition.ToDoubleArray(),
+                    firstFeature.Data.Coordinates.First().ToDoubleArray()) &&
+                distanceToStartFeature != DistanceHelpers.GetDistance(startPosition.ToDoubleArray(),
                     firstFeature.Data.Coordinates.Last().ToDoubleArray()))
             {
                 var projectionResult = DistanceHelpers.GetProjectionOnFeature(
@@ -222,9 +222,9 @@ namespace SearchGIS
             var distanceToEndFeature = DistanceHelpers.CalcualteDistanceToFeature(
                 lastFeature.Data.Coordinates.Select(x => x.ToDoubleArray()).ToArray(), endPosition.ToDoubleArray());
 
-            if (distanceToEndFeature < DistanceHelpers.GetDistance(endPosition.ToDoubleArray(),
-                    lastFeature.Data.Coordinates.First().ToDoubleArray()) ||
-                distanceToEndFeature < DistanceHelpers.GetDistance(endPosition.ToDoubleArray(),
+            if (distanceToEndFeature != DistanceHelpers.GetDistance(endPosition.ToDoubleArray(),
+                    lastFeature.Data.Coordinates.First().ToDoubleArray()) &&
+                distanceToEndFeature != DistanceHelpers.GetDistance(endPosition.ToDoubleArray(),
                     lastFeature.Data.Coordinates.Last().ToDoubleArray()))
             {
                 var projectionResult = DistanceHelpers.GetProjectionOnFeature(
@@ -395,6 +395,7 @@ namespace SearchGIS
 
                 foreach (var f in routeFeatures) f.Data.Coordinates = f.Data.Coordinates.Reverse().ToArray();
             }
+            //TODO bug fix when only one feature is present
 
             return routeFeatures.ToArray();
         }
