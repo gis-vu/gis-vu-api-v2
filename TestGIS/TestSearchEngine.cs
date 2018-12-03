@@ -43,5 +43,33 @@ namespace TestGIS
 
             //Assert.True(secondAsText.ToLower() == first.ToLower());
         }
+
+        [Fact]
+        public void FindRouteOnSameFeature()
+        {
+            //Assert.True(true);
+
+            var searchEngine = new SearchEngine(new Loader(
+                @"C:\Users\daini\Desktop\GIS\Projektas\Projektas.V2\API2\TestGIS\TestData\grid.txt",
+                @"C:\Users\daini\Desktop\GIS\Projektas\Projektas.V2\API2\TestGIS\TestData\"));
+
+            var route = searchEngine.FindRoute(new RouteSearchRequestDTO()
+            {
+                Start = new CoordinateDTO()
+                {
+                    Lng = 25.324857688107983,
+                    Lat = 54.7171194829061
+                },
+                End = new CoordinateDTO()
+                {
+                    Lng = 25.325176757466124,
+                    Lat = 54.716685610382342
+                },
+                Points = Array.Empty<CoordinateDTO>()
+            });
+        
+            Assert.True(route.Routes[0].Data.Coordinates.Length == 4);
+
+        }
     }
 }

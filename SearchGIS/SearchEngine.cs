@@ -174,7 +174,7 @@ namespace SearchGIS
 
         private RouteDTO PathToRoute(List<RouteFeature> path, PointPosition startPosition, PointPosition endPosition)
         {
-            var sortedFeatures = SortFeatures(path);
+            var sortedFeatures = SortFeatures(path, startPosition, endPosition);          
 
             var routeDto = new RouteDTO
             {
@@ -303,7 +303,7 @@ namespace SearchGIS
         //    return coordinates.ToArray();
         //}
 
-        private IList<RouteFeature> SortFeatures(IList<RouteFeature> path)
+        private IList<RouteFeature> SortFeatures(List<RouteFeature> path, PointPosition startPosition, PointPosition endPosition)
         {
             var tempPat = new List<RouteFeature>(path);
 
@@ -395,9 +395,38 @@ namespace SearchGIS
 
                 foreach (var f in routeFeatures) f.Data.Coordinates = f.Data.Coordinates.Reverse().ToArray();
             }
-            //TODO bug fix when only one feature is present
+            else if (routeFeatures.Count() == 1)
+            {
+                var projectionStart = DistanceHelpers.GetProjectionOnFeature(
+                    routeFeatures.First().Data.Coordinates.Select(x => x.ToDoubleArray()).ToArray(),
+                    startPosition.ToDoubleArray());
+
+                var projectionEnd = DistanceHelpers.GetProjectionOnFeature(
+                    routeFeatures.First().Data.Coordinates.Select(x => x.ToDoubleArray()).ToArray(),
+                    endPosition.ToDoubleArray());
+
+                var featureSegments = DistanceHelpers.SplitFeatureIntoLineSegments(routeFeatures.First().Data
+                    .Coordinates.Select(x => x.ToDoubleArray()).ToArray());
+
+                var indexStart = FindIndex(projectionStart.Item1, featureSegments);
+                var indexEnd = FindIndex(projectionEnd.Item1, featureSegments);
+
+                if (indexEnd < indexStart)
+                    routeFeatures.First().Data.Coordinates = routeFeatures.First().Data.Coordinates.Reverse().ToArray();
+            }
 
             return routeFeatures.ToArray();
+        }
+
+        private int FindIndex(Tuple<double[], double[]> lineSegment, Tuple<double[], double[]>[] featureSegments)
+        {
+            for(var i = 0; i< featureSegments.Length; i++)
+            {
+                if (new[]{lineSegment.Item1,lineSegment.Item2}.SelectMany(x=>x).SequenceEqual(new []{ featureSegments[i].Item1, featureSegments[i].Item2 }.SelectMany(x=>x)))
+                    return i;
+            }
+
+            throw new Exception("Smgth went wrong");
         }
     }
 }
