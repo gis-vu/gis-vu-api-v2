@@ -25,12 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="TestData\102.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="TestData\grid.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    <Folder Include="TestData\" />
   </ItemGroup>
 
 </Project>

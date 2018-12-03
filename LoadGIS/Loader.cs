@@ -29,37 +29,36 @@ namespace LoadGIS
 
         public LoadedData Load(PointPosition start, PointPosition end, PointPosition[] intermediates)
         {
+            var cellSequence = new List<GridCell>();
+
             var startGridCell = FindGridCell(start);
             var endGridCell = FindGridCell(end);
 
-            var gridCells = new List<GridCell>();
+            //var gridCells = new List<GridCell>();
 
-            foreach (var p in intermediates)
-            {
-                gridCells.Add(FindGridCell(p));
-            }
+            //foreach (var p in intermediates)
+            //{
+            //    gridCells.Add(FindGridCell(p));
+            //}
+
+            cellSequence.Add(startGridCell);
 
             var cellToFeatures = new Dictionary<string,CellData>();
             cellToFeatures[startGridCell.Index] = ReadCellData(startGridCell.Index);
-
-            var startFeature = FindClosetFeature(start, cellToFeatures[startGridCell.Index].Features);
-
-            RouteFeature endFeature;
 
             if (!cellToFeatures.ContainsKey(endGridCell.Index))
             {
                 cellToFeatures[endGridCell.Index] = ReadCellData(endGridCell.Index);
                 UpdateNeighbours(cellToFeatures, endGridCell.Index);
             }
-
-            endFeature = FindClosetFeature(end, cellToFeatures[endGridCell.Index].Features);
-
-
+            
             var intermediateFeatures = new List<RouteFeature>();
 
             foreach (var p in intermediates)
             {
-                var cell = FindGridCell(end);
+                var cell = FindGridCell(p);
+
+                cellSequence.Add(cell);
 
                 if (!cellToFeatures.ContainsKey(cell.Index))
                 {
@@ -70,14 +69,101 @@ namespace LoadGIS
                 intermediateFeatures.Add(FindClosetFeature(p, cellToFeatures[cell.Index].Features));
             }
 
+            cellSequence.Add(endGridCell);
+            
+            var tempGridCells = GetTempGridCells(cellSequence.ToArray());
+
+            foreach (var c in tempGridCells)
+            {
+                if (!cellToFeatures.ContainsKey(c.Index))
+                {
+                    cellToFeatures[c.Index] = ReadCellData(c.Index);
+                    UpdateNeighbours(cellToFeatures, c.Index);
+                }
+            }
+
 
             return new LoadedData()
             {
-                StartFeature = startFeature,
-                EndFeature = endFeature,
+                StartFeature = FindClosetFeature(start, cellToFeatures[startGridCell.Index].Features),
+                EndFeature = FindClosetFeature(end, cellToFeatures[endGridCell.Index].Features),
                 IntermediateFeatures = intermediateFeatures.ToArray(),
                 AllFeatures = cellToFeatures.Values.SelectMany(x=> x.Features).ToArray()
             };
+        }
+
+        private GridCell[] GetTempGridCells(GridCell[] gridCells)
+        {
+            var cellCoordinates = gridCells.Select(c =>
+            {
+                var index = int.Parse(c.Index);
+                var y = index / 38;
+                var x = index - y * 38;
+
+                return new Tuple<int, int>(x, y);
+            });
+
+            var maxX = cellCoordinates.Select(x => x.Item1).Max();
+            var minX = cellCoordinates.Select(x => x.Item1).Min();
+
+            var maxY = cellCoordinates.Select(x => x.Item2).Max();
+            var minY = cellCoordinates.Select(x => x.Item2).Min();
+
+            var result = new List<GridCell>();
+
+            for (int i = minX; i <= maxX; i++)
+            {
+                for (int j = minY; j <= maxY; j++)
+                {
+                    result.Add(_grid.First(x=>int.Parse(x.Index) == j * 38 + i));
+                }
+            }
+
+
+            return result.ToArray();
+
+        }
+
+        private GridCell[] GetTempGridCells2(GridCell[] gridCells)
+        {
+
+            var cellsVertice = gridCells.Select(x => x.Border.Select(y=>y.ToDoubleArray()).ToArray()).ToArray();
+
+            var allLines = new List<Tuple<double[],double[]>[]>();
+
+            for (int i = 0; i < cellsVertice.Length - 1; i++)
+            {
+                var c1 = cellsVertice[i];
+                var c2 = cellsVertice[i+1];
+
+                var lines = new List<Tuple<double[],double[]>>();
+
+                for (int j = 0; j < c1.Length; j++)
+                {
+                    var maxDistance = -1d;
+                    var startPoint = c1[j];
+                    double[] endPoint = null;
+
+                    for (int k = 0; k < c2.Length; k++)
+                    {
+                        var distance = Helpers.DistanceHelpers.GetDistance(c1[j], c2[k]);
+                        if (distance > maxDistance)
+                        {
+                            maxDistance = distance;
+                            endPoint = c2[k];
+                        }
+                    }
+
+                    if(endPoint == null)
+                        throw new Exception("smth went wrong");
+
+                    lines.Add(new Tuple<double[], double[]>(startPoint, endPoint));
+                }
+
+                allLines.Add(lines.ToArray());
+            }
+
+            return null;
         }
 
         private void UpdateNeighbours(Dictionary<string, CellData> cellToFeatures, string cellIndex)
