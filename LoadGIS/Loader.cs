@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
+using DTOs;
 using Helpers;
 using Models;
 
@@ -29,12 +30,12 @@ namespace LoadGIS
         }
 
 
-        public LoadedData Load(PointPosition start, PointPosition end, PointPosition[] intermediates)
+        public LoadedData Load(LoadRequest request)
         {
             var cellSequence = new List<GridCell>();
 
-            var startGridCell = FindGridCell(start);
-            var endGridCell = FindGridCell(end);
+            var startGridCell = FindGridCell(request.Start);
+            var endGridCell = FindGridCell(request.End);
 
             //var gridCells = new List<GridCell>();
 
@@ -59,7 +60,7 @@ namespace LoadGIS
             
             var intermediateFeatures = new List<RouteFeature>();
 
-            foreach (var p in intermediates)
+            foreach (var p in request.Intermediates)
             {
                 var cell = FindGridCell(p);
 
@@ -90,8 +91,8 @@ namespace LoadGIS
 
             return new LoadedData()
             {
-                StartFeature = FindClosetFeature(start, cellToFeatures[startGridCell.Index].Features),
-                EndFeature = FindClosetFeature(end, cellToFeatures[endGridCell.Index].Features),
+                StartFeature = FindClosetFeature(request.Start, cellToFeatures[startGridCell.Index].Features),
+                EndFeature = FindClosetFeature(request.End, cellToFeatures[endGridCell.Index].Features),
                 IntermediateFeatures = intermediateFeatures.ToArray(),
                 AllFeatures = cellToFeatures.Values.SelectMany(x=> x.Features).ToArray()
             };
@@ -228,26 +229,26 @@ namespace LoadGIS
             }
         }
 
-        private GridCell FindGridCell(PointPosition requestStart)
+        private GridCell FindGridCell(double[] requestStart)
         {
             foreach (var g in _grid)
             {
-                if (DistanceHelpers.IsInside(requestStart.ToDoubleArray(), g.Border.Select(x => x.ToDoubleArray()).ToArray()))
+                if (DistanceHelpers.IsInside(requestStart, g.Border.Select(x => x.ToDoubleArray()).ToArray()))
                     return g;
             }
 
             throw new Exception();
         }
 
-        private RouteFeature FindClosetFeature(PointPosition p, RouteFeature[] features)
+        private RouteFeature FindClosetFeature(double[] p, RouteFeature[] features)
         {
             var closet = features.First();
             var dist = DistanceHelpers.CalcualteDistanceToFeature(
-                closet.Data.Coordinates.Select(x => x.ToDoubleArray()).ToArray(), p.ToDoubleArray());
+                closet.Data.Coordinates.Select(x => x.ToDoubleArray()).ToArray(), p);
 
             foreach (var f in features.Skip(1))
             {
-                var newDistance = DistanceHelpers.CalcualteDistanceToFeature(f.Data.Coordinates.Select(x => x.ToDoubleArray()).ToArray(), p.ToDoubleArray());
+                var newDistance = DistanceHelpers.CalcualteDistanceToFeature(f.Data.Coordinates.Select(x => x.ToDoubleArray()).ToArray(), p);
 
                 if (newDistance < dist)
                 {

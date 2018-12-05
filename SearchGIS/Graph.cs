@@ -8,7 +8,7 @@ using Models;
 
 namespace GIS.VU.API
 {
-    class Graph
+    public class Graph
     {
         private RouteFeature[] _routeFeature2s;
         private SearchOptionsDTO _searchOptions;

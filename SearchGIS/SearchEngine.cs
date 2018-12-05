@@ -24,21 +24,7 @@ namespace SearchGIS
             var requestJson = JsonConvert.SerializeObject(request);
 
             var loadedData = Loader.Load(
-                new PointPosition
-                {
-                    Latitude = request.Start.Lat,
-                    Longitude = request.Start.Lng
-                },
-                new PointPosition
-                {
-                    Latitude = request.End.Lat,
-                    Longitude = request.End.Lng
-                },
-                request.Points.Select(x => new PointPosition
-                {
-                    Latitude = x.Lat,
-                    Longitude = x.Lng
-                }).ToArray()
+                request.ToLoadRequest()
             );
 
             var graph = new Graph(loadedData.AllFeatures, request.SearchOptions);
@@ -66,68 +52,79 @@ namespace SearchGIS
             }
             else
             {
-                var allFeatures = new List<RouteFeature>();
-
-                var path = graph.FindShortestPath(loadedData.StartFeature, loadedData.IntermediateFeatures.First(),
-                    null);
-                RouteDTO tempRoute;
-
-                allFeatures.AddRange(path);
-
-                var route = PathToRoute(path, new PointPosition
-                    {
-                        Latitude = request.Start.Lat,
-                        Longitude = request.Start.Lng
-                    },
-                    new PointPosition
-                    {
-                        Latitude = request.Points.First().Lat,
-                        Longitude = request.Points.First().Lng
-                    });
-
-                for (var i = 1; i < loadedData.IntermediateFeatures.Length; i++)
+                var route = FindRoute(new RouteRequest()
                 {
-                    path = graph.FindShortestPath(loadedData.IntermediateFeatures[i - 1],
-                        loadedData.IntermediateFeatures[i], allFeatures);
-
-                    allFeatures.AddRange(path);
-
-                    tempRoute = PathToRoute(path,
-                        new PointPosition
-                        {
-                            Latitude = request.Points[i - 1].Lat,
-                            Longitude = request.Points[i - 1].Lng
-                        },
-                        new PointPosition
-                        {
-                            Latitude = request.Points[i].Lat,
-                            Longitude = request.Points[i].Lng
-                        });
-
-                    route = MergeTwoRoutes(route, tempRoute);
-                }
-
-                path = graph.FindShortestPath(loadedData.IntermediateFeatures.Last(), loadedData.EndFeature, allFeatures);
-                tempRoute = PathToRoute(path,
-                    new PointPosition
-                    {
-                        Latitude = request.Points.Last().Lat,
-                        Longitude = request.Points.Last().Lng
-                    },
-                    new PointPosition
-                    {
-                        Latitude = request.End.Lat,
-                        Longitude = request.End.Lng
-                    });
-
-                route = MergeTwoRoutes(route, tempRoute);
+                    Request = request,
+                    Graph = graph,
+                    Data = loadedData
+                });
 
 
                 return new RouteSearchResponseDTO(new[] {route});
             }
         }
 
-        private RouteDTO MergeTwoRoutes(RouteDTO route1, RouteDTO route2)
+        public static RouteDTO FindRoute(RouteRequest r)
+        {
+            var allFeatures = new List<RouteFeature>();
+
+            var path = r.Graph.FindShortestPath(r.Data.StartFeature, r.Data.IntermediateFeatures.First(),
+                null);
+            RouteDTO tempRoute;
+
+            allFeatures.AddRange(path);
+
+            var route = PathToRoute(path, new PointPosition
+                {
+                    Latitude = r.Request.Start.Lat,
+                    Longitude = r.Request.Start.Lng
+                },
+                new PointPosition
+                {
+                    Latitude = r.Request.Points.First().Lat,
+                    Longitude = r.Request.Points.First().Lng
+                });
+
+            for (var i = 1; i < r.Data.IntermediateFeatures.Length; i++)
+            {
+                path = r.Graph.FindShortestPath(r.Data.IntermediateFeatures[i - 1],
+                    r.Data.IntermediateFeatures[i], allFeatures);
+
+                allFeatures.AddRange(path);
+
+                tempRoute = PathToRoute(path,
+                    new PointPosition
+                    {
+                        Latitude = r.Request.Points[i - 1].Lat,
+                        Longitude = r.Request.Points[i - 1].Lng
+                    },
+                    new PointPosition
+                    {
+                        Latitude = r.Request.Points[i].Lat,
+                        Longitude = r.Request.Points[i].Lng
+                    });
+
+                route = MergeTwoRoutes(route, tempRoute);
+            }
+
+            path = r.Graph.FindShortestPath(r.Data.IntermediateFeatures.Last(), r.Data.EndFeature, allFeatures);
+            tempRoute = PathToRoute(path,
+                new PointPosition
+                {
+                    Latitude = r.Request.Points.Last().Lat,
+                    Longitude = r.Request.Points.Last().Lng
+                },
+                new PointPosition
+                {
+                    Latitude = r.Request.End.Lat,
+                    Longitude = r.Request.End.Lng
+                });
+
+            route = MergeTwoRoutes(route, tempRoute);
+            return route;
+        }
+
+        public static RouteDTO MergeTwoRoutes(RouteDTO route1, RouteDTO route2)
         {
             var data = new RouteDataDTO
             {
@@ -182,7 +179,7 @@ namespace SearchGIS
             return result;
         }
 
-        private RouteDTO PathToRoute(List<RouteFeature> path, PointPosition startPosition, PointPosition endPosition)
+        public static RouteDTO PathToRoute(List<RouteFeature> path, PointPosition startPosition, PointPosition endPosition)
         {
             var sortedFeatures = SortFeatures(path, startPosition, endPosition);          
 
@@ -313,7 +310,7 @@ namespace SearchGIS
         //    return coordinates.ToArray();
         //}
 
-        private IList<RouteFeature> SortFeatures(List<RouteFeature> path, PointPosition startPosition, PointPosition endPosition)
+        public static IList<RouteFeature> SortFeatures(List<RouteFeature> path, PointPosition startPosition, PointPosition endPosition)
         {
             var tempPat = new List<RouteFeature>(path);
 
@@ -428,7 +425,7 @@ namespace SearchGIS
             return routeFeatures.ToArray();
         }
 
-        private int FindIndex(Tuple<double[], double[]> lineSegment, Tuple<double[], double[]>[] featureSegments)
+        public static int FindIndex(Tuple<double[], double[]> lineSegment, Tuple<double[], double[]>[] featureSegments)
         {
             for(var i = 0; i< featureSegments.Length; i++)
             {
