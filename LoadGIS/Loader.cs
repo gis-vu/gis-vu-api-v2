@@ -12,6 +12,8 @@ namespace LoadGIS
     {
         private readonly string _pathToData;
         private GridCell[] _grid;
+        private Dictionary<string, CellData>  cellToFeatures = new Dictionary<string, CellData>();
+
 
         public Loader(string pathToGrid, string pathToData)
         {
@@ -43,8 +45,11 @@ namespace LoadGIS
 
             cellSequence.Add(startGridCell);
 
-            var cellToFeatures = new Dictionary<string,CellData>();
-            cellToFeatures[startGridCell.Index] = ReadCellData(startGridCell.Index);
+            if (!cellToFeatures.ContainsKey(startGridCell.Index))
+            {
+                cellToFeatures[startGridCell.Index] = ReadCellData(startGridCell.Index);
+                UpdateNeighbours(cellToFeatures, startGridCell.Index);
+            }
 
             if (!cellToFeatures.ContainsKey(endGridCell.Index))
             {
@@ -104,10 +109,23 @@ namespace LoadGIS
             });
 
             var maxX = cellCoordinates.Select(x => x.Item1).Max();
+
+            if (maxX < 37)
+                maxX++;
+
             var minX = cellCoordinates.Select(x => x.Item1).Min();
+            if (minX > 0)
+                minX--;
 
             var maxY = cellCoordinates.Select(x => x.Item2).Max();
+
+            if (maxY < 29)
+                maxY++;
+
             var minY = cellCoordinates.Select(x => x.Item2).Min();
+
+            if (minY > 0)
+                minY--;
 
             var result = new List<GridCell>();
 
@@ -168,7 +186,7 @@ namespace LoadGIS
 
         private void UpdateNeighbours(Dictionary<string, CellData> cellToFeatures, string cellIndex)
         {
-            Console.WriteLine("Updating feature neigbhours");
+            //Console.WriteLine("Updating feature neigbhours");
 
             double amount = 0, temp = 0, all = cellToFeatures[cellIndex].BorderFeatures.Length;
 
@@ -182,7 +200,7 @@ namespace LoadGIS
                 temp++;
                 if (temp > all / 100)
                 {
-                    Console.WriteLine(Math.Round(amount / all * 100, 2));
+                    //Console.WriteLine(Math.Round(amount / all * 100, 2));
                     temp = 0;
                 }
 
@@ -199,6 +217,9 @@ namespace LoadGIS
 
         private CellData ReadCellData(string index)
         {
+            Console.WriteLine("Read index: " + index);
+
+
             var formatter = new BinaryFormatter();
 
             using (var fileStream = new FileStream(_pathToData + index + ".txt", FileMode.Open))

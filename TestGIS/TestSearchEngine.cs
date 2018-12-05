@@ -16,8 +16,8 @@ namespace TestGIS
             //Assert.True(true);
 
             var searchEngine = new SearchEngine(new Loader(
-                @"C:\Users\daini\Desktop\GIS\Projektas\Projektas.V2\API2\TestGIS\TestData\grid.txt", 
-                @"C:\Users\daini\Desktop\GIS\Projektas\Projektas.V2\API2\TestGIS\TestData\"));
+                @"C:\Users\daini\Desktop\GIS\Projektas\Projektas.V2\API2\GIS.VU.API\Data\grid.txt",
+                @"C:\Users\daini\Desktop\GIS\Projektas\Projektas.V2\API2\GIS.VU.API\Data\"));
 
             var route = searchEngine.FindRoute(new RouteSearchRequestDTO()
             {
@@ -50,8 +50,8 @@ namespace TestGIS
             //Assert.True(true);
 
             var searchEngine = new SearchEngine(new Loader(
-                @"C:\Users\daini\Desktop\GIS\Projektas\Projektas.V2\API2\TestGIS\TestData\grid.txt",
-                @"C:\Users\daini\Desktop\GIS\Projektas\Projektas.V2\API2\TestGIS\TestData\"));
+                @"C:\Users\daini\Desktop\GIS\Projektas\Projektas.V2\API2\GIS.VU.API\Data\grid.txt",
+                @"C:\Users\daini\Desktop\GIS\Projektas\Projektas.V2\API2\GIS.VU.API\Data\"));
 
             var route = searchEngine.FindRoute(new RouteSearchRequestDTO()
             {

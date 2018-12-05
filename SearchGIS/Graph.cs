@@ -97,9 +97,7 @@ namespace GIS.VU.API
 
             var featureLength = feature2.Data.Properties["LENGTH"];
 
-            return featureLength;
-            //temp fix
-
+          
             if (_searchOptions == null)
                 return featureLength;
 
@@ -117,11 +115,12 @@ namespace GIS.VU.API
                 featureLength *= _searchOptions.TrackOverlapImportance;
             }
 
-            foreach (var propertyValueImportance in _searchOptions.PropertyValueImportance)
-            {
-                if (feature2.Data.Properties[propertyValueImportance.Property] <= propertyValueImportance.Threshold)
-                    featureLength *= propertyValueImportance.Importance;
-            }
+            //forrest and water distance
+            //foreach (var propertyValueImportance in _searchOptions.PropertyValueImportance)
+            //{
+            //    if (feature2.Data.Properties[propertyValueImportance.Property] <= propertyValueImportance.Threshold)
+            //        featureLength *= propertyValueImportance.Importance;
+            //}
 
 
             return featureLength;

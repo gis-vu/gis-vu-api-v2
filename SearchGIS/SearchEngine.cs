@@ -63,9 +63,13 @@ namespace SearchGIS
             }
             else
             {
+                var allFeatures = new List<RouteFeature>();
+
                 var path = graph.FindShortestPath(loadedData.StartFeature, loadedData.IntermediateFeatures.First(),
                     null);
                 RouteDTO tempRoute;
+
+                allFeatures.AddRange(path);
 
                 var route = PathToRoute(path, new PointPosition
                     {
@@ -81,7 +85,10 @@ namespace SearchGIS
                 for (var i = 1; i < loadedData.IntermediateFeatures.Length; i++)
                 {
                     path = graph.FindShortestPath(loadedData.IntermediateFeatures[i - 1],
-                        loadedData.IntermediateFeatures[i], null);
+                        loadedData.IntermediateFeatures[i], allFeatures);
+
+                    allFeatures.AddRange(path);
+
                     tempRoute = PathToRoute(path,
                         new PointPosition
                         {
@@ -97,7 +104,7 @@ namespace SearchGIS
                     route = MergeTwoRoutes(route, tempRoute);
                 }
 
-                path = graph.FindShortestPath(loadedData.IntermediateFeatures.Last(), loadedData.EndFeature, null);
+                path = graph.FindShortestPath(loadedData.IntermediateFeatures.Last(), loadedData.EndFeature, allFeatures);
                 tempRoute = PathToRoute(path,
                     new PointPosition
                     {
