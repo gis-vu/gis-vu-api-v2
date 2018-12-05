@@ -6,6 +6,7 @@ using GIS.VU.API;
 using Helpers;
 using LoadGIS;
 using Models;
+using Newtonsoft.Json;
 
 namespace SearchGIS
 {
@@ -20,6 +21,8 @@ namespace SearchGIS
 
         public RouteSearchResponseDTO FindRoute(RouteSearchRequestDTO request)
         {
+            var requestJson = JsonConvert.SerializeObject(request);
+
             var loadedData = Loader.Load(
                 new PointPosition
                 {
