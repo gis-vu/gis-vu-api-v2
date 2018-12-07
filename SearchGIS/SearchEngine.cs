@@ -19,6 +19,46 @@ namespace SearchGIS
 
         private ILoader Loader { get; }
 
+
+        public RouteSearchResponseDTO FindRoute2(RouteSearchRequestDTO request)
+        {
+            var line = new[] {request.Start.ToDoubleArray()}.Concat(request.Points.Select(x => x.ToDoubleArray()))
+                .Concat(new[] {request.End.ToDoubleArray()}).ToArray();
+
+            var segments = DistanceHelpers.SplitFeatureIntoLineSegments(line);
+
+            var usedFeatures = new List<RouteFeature>();
+
+            RouteDTO route = null;
+
+            foreach (var s in segments)
+            {
+                var loadedData = Loader.LoadDataBetweenTwoPoints(s.Item1, s.Item2);
+
+                var graph = new Graph(loadedData.AllFeatures, request.SearchOptions);
+
+                var path = graph.FindShortestPath(loadedData.StartFeature, loadedData.EndFeature, usedFeatures);
+
+                usedFeatures.AddRange(path);
+
+                var tempRoute = PathToRoute(path,
+                    new PointPosition
+                    {
+                        Latitude = s.Item1[1],
+                        Longitude = s.Item1[0]
+                    },
+                    new PointPosition
+                    {
+                        Latitude = s.Item2[1],
+                        Longitude = s.Item2[0]
+                    });
+
+                route = MergeTwoRoutes(route, tempRoute);
+            }
+
+            return new RouteSearchResponseDTO(new[] { route });
+        }
+
         public RouteSearchResponseDTO FindRoute(RouteSearchRequestDTO request)
         {
             var requestJson = JsonConvert.SerializeObject(request);
@@ -126,6 +166,9 @@ namespace SearchGIS
 
         public static RouteDTO MergeTwoRoutes(RouteDTO route1, RouteDTO route2)
         {
+            if (route1 == null)
+                return route2;
+
             var data = new RouteDataDTO
             {
                 Type = route1.Data.Type

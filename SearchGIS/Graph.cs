@@ -73,6 +73,9 @@ namespace GIS.VU.API
 
                 foreach (var neighbor in smallest.Neighbours)
                 {
+                    if(!_routeFeature2s.Contains(neighbor))
+                        continue;
+
                     var alt = distances[smallest] + ApplySearchOptionsToGetLength(neighbor, featuresToOverlap);
                     if (alt < distances[neighbor])
                     {

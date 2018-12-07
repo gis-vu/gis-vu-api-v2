@@ -31,7 +31,7 @@ namespace GIS.VU.API.Controllers
         [HttpPost]
         public ActionResult<RouteSearchResponseDTO> Post([FromBody] RouteSearchRequestDTO request)
         {
-            return _searchEngine.FindRoute(request);
+            return _searchEngine.FindRoute2(request);
         }
     }
 }
