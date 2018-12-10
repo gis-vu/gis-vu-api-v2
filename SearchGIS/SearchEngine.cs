@@ -23,7 +23,7 @@ namespace SearchGIS
         public RouteSearchResponseDTO FindRoute2(RouteSearchRequestDTO request)
         {
 
-            if (request.PolygonPoints.Length > 0 && request.PolygonPoints.Length < 4)
+            if (request.PolygonPoints.Length < 4)
             {
                 throw new Exception("Turėtų būti bent 3 duomenų poligono kampai");
             }
@@ -45,6 +45,10 @@ namespace SearchGIS
 
                 var path = graph.FindShortestPath(loadedData.StartFeature, loadedData.EndFeature, usedFeatures);
 
+
+                if(path == null)
+                    throw  new Exception("Kelias nerastas");
+
                 usedFeatures.AddRange(path);
 
                 var tempRoute = PathToRoute(path,
@@ -62,7 +66,21 @@ namespace SearchGIS
                 route = MergeTwoRoutes(route, tempRoute);
             }
 
+            RecalculateLength(route);
+
             return new RouteSearchResponseDTO(new[] { route });
+        }
+
+        private void RecalculateLength(RouteDTO route)
+        {
+            var length = 0d;
+
+            foreach (var s in DistanceHelpers.SplitFeatureIntoLineSegments(route.Data.Coordinates))
+            {
+                length += DistanceHelpers.DistanceBetweenCoordinates(s.Item1, s.Item2);
+            }
+
+            route.Info.Length = Math.Round(length, 2);
         }
 
         public RouteSearchResponseDTO FindRoute(RouteSearchRequestDTO request)
