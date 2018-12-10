@@ -25,8 +25,12 @@ namespace SearchGIS
 
             if (request.PolygonPoints.Length < 4)
             {
-                throw new Exception("Turėtų būti bent 3 duomenų poligono kampai");
+                throw new Exception("Turėtų būti bent 3 duomenų ribokliai");
             }
+
+
+            CheckIfAllPoinsInsidePolygon(request);
+
 
             var line = new[] {request.Start.ToDoubleArray()}.Concat(request.Points.Select(x => x.ToDoubleArray()))
                 .Concat(new[] {request.End.ToDoubleArray()}).ToArray();
@@ -69,6 +73,24 @@ namespace SearchGIS
             RecalculateLength(route);
 
             return new RouteSearchResponseDTO(new[] { route });
+        }
+
+        private void CheckIfAllPoinsInsidePolygon(RouteSearchRequestDTO request)
+        {
+            var polygon = request.PolygonPoints.Select(x => x.ToDoubleArray()).ToArray();
+
+            foreach (var p in request.Points)
+            {
+                if(!DistanceHelpers.IsInside(p.ToDoubleArray(), polygon))
+                    throw  new Exception("Ne visi tarpiniai taškai patenka į apibrėžtą poligoną");
+            }
+
+            if (!DistanceHelpers.IsInside(request.Start.ToDoubleArray(), polygon))
+                throw new Exception("Pradžia nepatenka į apibrėžtą poligoną");
+
+            if (!DistanceHelpers.IsInside(request.End.ToDoubleArray(), polygon))
+                throw new Exception("Pabaiga nepatenka į apibrėžtą poligoną");
+
         }
 
         private void RecalculateLength(RouteDTO route)
