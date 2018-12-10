@@ -17,17 +17,17 @@ namespace TestGIS
                 @"C:\Users\daini\Desktop\GIS\Projektas\Projektas.V2\API2\GIS.VU.API\Data\");
 
 
-            var loadedDataBetweenTwoPoints = loader.LoadDataBetweenTwoPoints(
-                new CoordinateDTO()
-                {
-                    Lng = 25.386275646947524,
-                    Lat = 56.009083498783212
-                }.ToDoubleArray(),
-                new CoordinateDTO()
-                {
-                    Lng = 25.359882641624324,
-                    Lat = 55.989464314910151
-                }.ToDoubleArray());
+            //var loadedDataBetweenTwoPoints = loader.LoadDataBetweenTwoPoints(
+            //    new CoordinateDTO()
+            //    {
+            //        Lng = 25.386275646947524,
+            //        Lat = 56.009083498783212
+            //    }.ToDoubleArray(),
+            //    new CoordinateDTO()
+            //    {
+            //        Lng = 25.359882641624324,
+            //        Lat = 55.989464314910151
+            //    }.ToDoubleArray());
         }
     }
 }

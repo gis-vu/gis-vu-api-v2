@@ -49,13 +49,13 @@ namespace LoadGIS
             if (!cellToFeatures.ContainsKey(startGridCell.Index))
             {
                 cellToFeatures[startGridCell.Index] = ReadCellData(startGridCell.Index);
-                UpdateNeighbours(cellToFeatures, startGridCell.Index);
+                UpdateNeighbours(cellToFeatures, startGridCell);
             }
 
             if (!cellToFeatures.ContainsKey(endGridCell.Index))
             {
                 cellToFeatures[endGridCell.Index] = ReadCellData(endGridCell.Index);
-                UpdateNeighbours(cellToFeatures, endGridCell.Index);
+                UpdateNeighbours(cellToFeatures, endGridCell);
             }
 
             var intermediateFeatures = new List<RouteFeature>();
@@ -69,7 +69,7 @@ namespace LoadGIS
                 if (!cellToFeatures.ContainsKey(cell.Index))
                 {
                     cellToFeatures[cell.Index] = ReadCellData(cell.Index);
-                    UpdateNeighbours(cellToFeatures, cell.Index);
+                    UpdateNeighbours(cellToFeatures, cell);
                 }
 
                 intermediateFeatures.Add(FindClosetFeature(p, cellToFeatures[cell.Index].Features));
@@ -84,7 +84,7 @@ namespace LoadGIS
                 if (!cellToFeatures.ContainsKey(c.Index))
                 {
                     cellToFeatures[c.Index] = ReadCellData(c.Index);
-                    UpdateNeighbours(cellToFeatures, c.Index);
+                    UpdateNeighbours(cellToFeatures, c);
                 }
             }
 
@@ -186,15 +186,19 @@ namespace LoadGIS
         }
 
         //TODO optimize for neigboring cells
-        private void UpdateNeighbours(Dictionary<string, CellData> cellToFeatures, string cellIndex)
+        private void UpdateNeighbours(Dictionary<string, CellData> cellToFeatures, GridCell cell)
         {
             //Console.WriteLine("Updating feature neigbhours");
 
-            double amount = 0, temp = 0, all = cellToFeatures[cellIndex].BorderFeatures.Length;
 
-            var newFeatures = cellToFeatures[cellIndex].BorderFeatures;
+            var neighbourinCells = GetTempGridCells(new[] {cell});
 
-            var borderFeatures = cellToFeatures.Where(x => x.Key != cellIndex).SelectMany(x => x.Value.BorderFeatures)
+
+            double amount = 0, temp = 0, all = cellToFeatures[cell.Index].BorderFeatures.Length;
+
+            var newFeatures = cellToFeatures[cell.Index].BorderFeatures;
+
+            var borderFeatures = cellToFeatures.Where(x => x.Key != cell.Index && neighbourinCells.Any(y=>y.Index == x.Key)).SelectMany(x => x.Value.BorderFeatures)
                 .ToArray();
 
             for (var i = 0; i < all; i++)
@@ -279,13 +283,13 @@ namespace LoadGIS
             if (!cellToFeatures.ContainsKey(startGridCell.Index))
             {
                 cellToFeatures[startGridCell.Index] = ReadCellData(startGridCell.Index);
-                UpdateNeighbours(cellToFeatures, startGridCell.Index);
+                UpdateNeighbours(cellToFeatures, startGridCell);
             }
 
             if (!cellToFeatures.ContainsKey(endGridCell.Index))
             {
                 cellToFeatures[endGridCell.Index] = ReadCellData(endGridCell.Index);
-                UpdateNeighbours(cellToFeatures, endGridCell.Index);
+                UpdateNeighbours(cellToFeatures, endGridCell);
             }
 
             var tempGridCells = GetTempGridCells(cellSequence.ToArray());
@@ -295,7 +299,7 @@ namespace LoadGIS
                 if (!cellToFeatures.ContainsKey(c.Index))
                 {
                     cellToFeatures[c.Index] = ReadCellData(c.Index);
-                    UpdateNeighbours(cellToFeatures, c.Index);
+                    UpdateNeighbours(cellToFeatures, c);
                 }
 
                 cellSequence.Add(c);
@@ -304,28 +308,29 @@ namespace LoadGIS
 
             var result = new List<RouteFeature>();
 
-            double diff = 6000;
-            var count = 0;
+            //double diff = 6000;
+            //var count = 0;
 
             //DistanceHelpers.DistanceBetweenCoordinates();
 
             foreach (var c in cellSequence)
             {
-                count += cellToFeatures[c.Index].Features.Length; //how much we will save
+                //count += cellToFeatures[c.Index].Features.Length; //how much we will save
 
+                result.AddRange(cellToFeatures[c.Index].Features);
 
-                foreach (var f in cellToFeatures[c.Index].Features)
-                {
+                //foreach (var f in cellToFeatures[c.Index].Features)
+                //{
 
-                    var cord = f.Data.Coordinates.Skip(f.Data.Coordinates.Length / 2).FirstOrDefault().ToDoubleArray();
+                //    var cord = f.Data.Coordinates.Skip(f.Data.Coordinates.Length / 2).FirstOrDefault().ToDoubleArray();
 
-                    var projection = DistanceHelpers.GetProjectionOnLine(new Tuple<double[], double[]>(start, end), cord);
+                //    var projection = DistanceHelpers.GetProjectionOnLine(new Tuple<double[], double[]>(start, end), cord);
 
-                    if (DistanceHelpers.DistanceBetweenCoordinates(projection, cord) < diff)
-                    {
-                        result.Add(f);
-                    }
-                }
+                //    if (DistanceHelpers.DistanceBetweenCoordinates(projection, cord) < diff)
+                //    {
+                //        result.Add(f);
+                //    }
+                //}
             }
 
 
