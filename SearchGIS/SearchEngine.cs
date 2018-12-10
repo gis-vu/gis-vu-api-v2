@@ -22,6 +22,12 @@ namespace SearchGIS
 
         public RouteSearchResponseDTO FindRoute2(RouteSearchRequestDTO request)
         {
+
+            if (request.PolygonPoints.Length > 0 && request.PolygonPoints.Length < 4)
+            {
+                throw new Exception("Turėtų būti bent 3 duomenų poligono kampai");
+            }
+
             var line = new[] {request.Start.ToDoubleArray()}.Concat(request.Points.Select(x => x.ToDoubleArray()))
                 .Concat(new[] {request.End.ToDoubleArray()}).ToArray();
 
@@ -33,7 +39,7 @@ namespace SearchGIS
 
             foreach (var s in segments)
             {
-                var loadedData = Loader.LoadDataBetweenTwoPoints(s.Item1, s.Item2);
+                var loadedData = Loader.LoadDataBetweenTwoPoints(s.Item1, s.Item2, request.PolygonPoints.Select(x=>x.ToDoubleArray()).ToArray());
 
                 var graph = new Graph(loadedData.AllFeatures, request.SearchOptions);
 

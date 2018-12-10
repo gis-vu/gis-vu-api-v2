@@ -7,6 +7,7 @@ namespace DTOs
         public CoordinateDTO Start { get; set; }
         public CoordinateDTO End { get; set; }
         public CoordinateDTO[] Points { get; set; }
+        public CoordinateDTO[] PolygonPoints { get; set; }
         public SearchOptionsDTO SearchOptions { get; set; }
 
         public LoadRequest ToLoadRequest()

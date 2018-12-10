@@ -264,7 +264,7 @@ namespace LoadGIS
             return closet;
         }
 
-        public LoadedData2 LoadDataBetweenTwoPoints(double[] start, double[] end)
+        public LoadedData2 LoadDataBetweenTwoPoints(double[] start, double[] end, double[][] polygonPoints)
         {
             var cellSequence = new List<GridCell>();
 
@@ -329,12 +329,14 @@ namespace LoadGIS
             }
 
 
+
+
             return new LoadedData2()
             {
                 StartFeature = FindClosetFeature(start,
                     cellToFeatures[startGridCell.Index].Features),
                 EndFeature = FindClosetFeature(end, cellToFeatures[endGridCell.Index].Features),
-                AllFeatures = result.ToArray()
+                AllFeatures = polygonPoints.Length  == 0 ? result.ToArray() : result.Where(x=> DistanceHelpers.IsInside(x.Data.Coordinates.First().ToDoubleArray(), polygonPoints) || DistanceHelpers.IsInside(x.Data.Coordinates.Last().ToDoubleArray(), polygonPoints)).ToArray()
             };
         }
     }
