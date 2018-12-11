@@ -23,6 +23,16 @@ namespace SearchGIS
         public RouteSearchResponseDTO FindRoute2(RouteSearchRequestDTO request)
         {
 
+            if (request.Start == null)
+            {
+                throw new Exception("Maršruto pradžios taškas turi būti nurodytas");
+            }
+
+            if (request.End == null)
+            {
+                throw new Exception("Maršruto pabaigos taškas turi būti nurodytas");
+            }
+
             if (request.PolygonPoints.Length < 4)
             {
                 throw new Exception("Turėtų būti bent 3 duomenų ribokliai");
