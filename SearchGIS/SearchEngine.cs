@@ -181,6 +181,8 @@ namespace SearchGIS
                     Longitude = r.Request.Points.First().Lng
                 });
 
+            var routeJson = route.ToGeoJson();
+
             for (var i = 1; i < r.Data.IntermediateFeatures.Length; i++)
             {
                 path = r.Graph.FindShortestPath(r.Data.IntermediateFeatures[i - 1],
@@ -200,7 +202,11 @@ namespace SearchGIS
                         Longitude = r.Request.Points[i].Lng
                     });
 
+                routeJson = tempRoute.ToGeoJson();
+
                 route = MergeTwoRoutes(route, tempRoute);
+
+                routeJson = route.ToGeoJson();
             }
 
             path = r.Graph.FindShortestPath(r.Data.IntermediateFeatures.Last(), r.Data.EndFeature, allFeatures);
@@ -299,48 +305,72 @@ namespace SearchGIS
                 }
             };
 
+            var routeJson = routeDto.ToGeoJson();
 
             var firstFeature = sortedFeatures.First();
             var lastFeature = sortedFeatures.Last();
 
-            var distanceToStartFeature = DistanceHelpers.CalcualteDistanceToFeature(
-                firstFeature.Data.Coordinates.Select(x => x.ToDoubleArray()).ToArray(), startPosition.ToDoubleArray());
 
-            if (distanceToStartFeature != DistanceHelpers.GetDistance(startPosition.ToDoubleArray(),
-                    firstFeature.Data.Coordinates.First().ToDoubleArray()) &&
-                distanceToStartFeature != DistanceHelpers.GetDistance(startPosition.ToDoubleArray(),
-                    firstFeature.Data.Coordinates.Last().ToDoubleArray()))
-            {
-                var projectionResult = DistanceHelpers.GetProjectionOnFeature(
-                    firstFeature.Data.Coordinates.Select(x => x.ToDoubleArray()).ToArray(),
+            var firstFeatureJson = FeaturesToGeojsonHelper.ToGeojson(new []{firstFeature.Data.Coordinates.Select(x=>x.ToDoubleArray()).ToArray()});
+            var lastFeatureJson = FeaturesToGeojsonHelper.ToGeojson(new []{ lastFeature.Data.Coordinates.Select(x=>x.ToDoubleArray()).ToArray()});
+
+            //var distanceToStartFeature = DistanceHelpers.CalcualteDistanceToFeature(
+            //    firstFeature.Data.Coordinates.Select(x => x.ToDoubleArray()).ToArray(), startPosition.ToDoubleArray());
+
+
+            var projectionOnStartFeature = DistanceHelpers.GetProjectionOnFeature(
+                firstFeature.Data.Coordinates.Select(x => x.ToDoubleArray()).ToArray(),
+                startPosition.ToDoubleArray());
+
+            var distanceToStartProjection =
+                DistanceHelpers.DistanceBetweenCoordinates(projectionOnStartFeature.Item2,
                     startPosition.ToDoubleArray());
 
-                var result = new List<double[]> {projectionResult.Item2};
+            if ((
+                distanceToStartProjection != DistanceHelpers.DistanceBetweenCoordinates(startPosition.ToDoubleArray(),
+                    firstFeature.Data.Coordinates.First().ToDoubleArray()) &&
+                distanceToStartProjection != DistanceHelpers.DistanceBetweenCoordinates(startPosition.ToDoubleArray(),
+                    firstFeature.Data.Coordinates.Last().ToDoubleArray())
+                )|| 
+                (distanceToStartProjection == DistanceHelpers.DistanceBetweenCoordinates(
+                     startPosition.ToDoubleArray(),
+                     firstFeature.Data.Coordinates.Last().ToDoubleArray()))
+                )
+            {
+                //var projectionResult = DistanceHelpers.GetProjectionOnFeature(
+                //    firstFeature.Data.Coordinates.Select(x => x.ToDoubleArray()).ToArray(),
+                //    startPosition.ToDoubleArray());
+
+                var result = new List<double[]> { projectionOnStartFeature.Item2};
 
                 var index = Array.FindIndex(routeDto.Data.Coordinates,
-                    x => x.SequenceEqual(projectionResult.Item1.Item1));
+                    x => x.SequenceEqual(projectionOnStartFeature.Item1.Item1));
 
                 result.AddRange(routeDto.Data.Coordinates.Skip(index + 1));
                 routeDto.Data.Coordinates = result.ToArray();
             }
 
+            var projectionOnEndFeature = DistanceHelpers.GetProjectionOnFeature(
+                lastFeature.Data.Coordinates.Select(x => x.ToDoubleArray()).ToArray(),
+                endPosition.ToDoubleArray());
 
-            var distanceToEndFeature = DistanceHelpers.CalcualteDistanceToFeature(
-                lastFeature.Data.Coordinates.Select(x => x.ToDoubleArray()).ToArray(), endPosition.ToDoubleArray());
+            var distanceToEndProjection =
+                DistanceHelpers.DistanceBetweenCoordinates(projectionOnEndFeature.Item2,
+                    endPosition.ToDoubleArray());
 
-            if (distanceToEndFeature != DistanceHelpers.GetDistance(endPosition.ToDoubleArray(),
+            if (distanceToEndProjection != DistanceHelpers.DistanceBetweenCoordinates(endPosition.ToDoubleArray(),
                     lastFeature.Data.Coordinates.First().ToDoubleArray()) &&
-                distanceToEndFeature != DistanceHelpers.GetDistance(endPosition.ToDoubleArray(),
+                distanceToEndProjection != DistanceHelpers.DistanceBetweenCoordinates(endPosition.ToDoubleArray(),
                     lastFeature.Data.Coordinates.Last().ToDoubleArray()))
             {
-                var projectionResult = DistanceHelpers.GetProjectionOnFeature(
-                    lastFeature.Data.Coordinates.Select(x => x.ToDoubleArray()).ToArray(), endPosition.ToDoubleArray());
+                //var projectionResult = DistanceHelpers.GetProjectionOnFeature(
+                //    lastFeature.Data.Coordinates.Select(x => x.ToDoubleArray()).ToArray(), endPosition.ToDoubleArray());
 
                 var index = Array.FindIndex(routeDto.Data.Coordinates,
-                    x => x.SequenceEqual(projectionResult.Item1.Item2));
+                    x => x.SequenceEqual(projectionOnEndFeature.Item1.Item2));
 
                 var result = routeDto.Data.Coordinates.Take(index).ToList();
-                result.Add(projectionResult.Item2);
+                result.Add(projectionOnEndFeature.Item2);
 
                 routeDto.Data.Coordinates = result.ToArray();
             }

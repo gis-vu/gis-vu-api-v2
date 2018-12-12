@@ -249,13 +249,13 @@ namespace LoadGIS
         private RouteFeature FindClosetFeature(double[] p, RouteFeature[] features)
         {
             var closet = features.First();
-            var dist = DistanceHelpers.CalcualteDistanceToFeature(
+            var dist = DistanceHelpers.CalcualteDistanceToFeatureInMeters(
                 closet.Data.Coordinates.Select(x => x.ToDoubleArray()).ToArray(), p);
 
             foreach (var f in features.Skip(1))
             {
                 var newDistance =
-                    DistanceHelpers.CalcualteDistanceToFeature(
+                    DistanceHelpers.CalcualteDistanceToFeatureInMeters(
                         f.Data.Coordinates.Select(x => x.ToDoubleArray()).ToArray(), p);
 
                 if (newDistance < dist)

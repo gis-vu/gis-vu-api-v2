@@ -8,4 +8,10 @@
     <PackageReference Include="GeoJSON" Version="1.2.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="Helpers">
+      <HintPath>..\..\PrepartyGIS\Helpers\bin\Debug\netstandard2.0\Helpers.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>
