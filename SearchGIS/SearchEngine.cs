@@ -358,10 +358,15 @@ namespace SearchGIS
                 DistanceHelpers.DistanceBetweenCoordinates(projectionOnEndFeature.Item2,
                     endPosition.ToDoubleArray());
 
-            if (distanceToEndProjection != DistanceHelpers.DistanceBetweenCoordinates(endPosition.ToDoubleArray(),
+            if ((distanceToEndProjection != DistanceHelpers.DistanceBetweenCoordinates(endPosition.ToDoubleArray(),
                     lastFeature.Data.Coordinates.First().ToDoubleArray()) &&
                 distanceToEndProjection != DistanceHelpers.DistanceBetweenCoordinates(endPosition.ToDoubleArray(),
                     lastFeature.Data.Coordinates.Last().ToDoubleArray()))
+                ||
+                (distanceToEndProjection == DistanceHelpers.DistanceBetweenCoordinates(
+                     endPosition.ToDoubleArray(),
+                     lastFeature.Data.Coordinates.First().ToDoubleArray()))
+                )
             {
                 //var projectionResult = DistanceHelpers.GetProjectionOnFeature(
                 //    lastFeature.Data.Coordinates.Select(x => x.ToDoubleArray()).ToArray(), endPosition.ToDoubleArray());

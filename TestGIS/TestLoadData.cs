@@ -12,9 +12,9 @@ namespace TestGIS
         [Fact]
         public void LoadFeaturesBetweenTwoPoints()
         {
-            var loader = new Loader(
-                @"C:\Users\daini\Desktop\GIS\Projektas\Projektas.V2\API2\GIS.VU.API\Data\grid.txt",
-                @"C:\Users\daini\Desktop\GIS\Projektas\Projektas.V2\API2\GIS.VU.API\Data\");
+            //var loader = new Loader(
+            //    @"C:\Users\daini\Desktop\GIS\Projektas\Projektas.V2\API2\GIS.VU.API\Data\grid.txt",
+            //    @"C:\Users\daini\Desktop\GIS\Projektas\Projektas.V2\API2\GIS.VU.API\Data\");
 
 
             //var loadedDataBetweenTwoPoints = loader.LoadDataBetweenTwoPoints(
